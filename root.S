@@ -43,11 +43,18 @@ start:
     btst    #Kb_BitAlt,d0
     jbne    failed
     
-    // On TOS versions supporting DMAread XBIOS function
-    // use this, otherwise our own ACSI loader
+    // Select whether to use XBIOS DMAread or our own ACSI loader
     lea     xbiosload(pc),a5
-    cmpi.l  #DMAr,d3
-    jbeq    findpartition
+    cmpi.l  #DMAr,d3            // magic number of DMAread is supported
+    jbne    use_own_loader
+    // Ataris DMAread is *extremely* slow, hence only
+    // use it for IDE & SCSI where we do not have our own loader
+    cmpi.w  #7,d4
+    jbhi    findpartition
+    move.w  d4,d7
+    lsl.w   #5,d7               // put device ID in bits 7-5
+
+use_own_loader:
     move.w  d7,d4               // device ID in bits 7-5
     lea     acsiload(pc),a5
 
@@ -159,6 +166,15 @@ load_end:
     // trashes A0-A2,D0-D2
 acsiload:
     st      flock.w
+    
+    // according to Ataris ACSI guide some devices require an additional wait
+del2ticks:
+    moveq.l #2,d1       // wait 2 ticks between command bytes
+    add.l   hz200.w,d1
+del2ticks_wait:
+    cmp.l   hz200.w,d1
+    jbge    del2ticks_wait
+    
     lea     dma_mode.w,a0
     lea     dma_data(a0),a1
 
@@ -205,21 +221,11 @@ exit_wait:
 
     move.w  #0x8a,(a0)  // select status byte
     move.w  (a1),d0     // read status byte
-    
-    // according to Ataris ACSI guide some devices require an additional wait
-    jbsr    del2ticks
 
 acsi_end:
     sf      flock.w
     rts
-    
-del2ticks:
-    moveq.l #2,d1       // wait 2 ticks between command bytes
-    add.l   hz200.w,d1
-del2ticks_wait:
-    cmp.l   hz200.w,d1
-    jbge    del2ticks_wait
-    rts
+
 
 cmd_buf:
     dc.l    0x0008008A  // READ command (device ID gets inserted here)
