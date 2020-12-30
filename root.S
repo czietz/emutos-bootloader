@@ -34,7 +34,7 @@
 
 start:
     // clear drive bit for C: in case booting fails
-    bclr    #('C'-'A'),drvbits.w
+    bclr    #('C'-'A'),(drvbits+3).w    // drvbits is a LONG
     
     // skip booting if Alt key is pressed
     pea     Kbshift
@@ -190,7 +190,7 @@ next_cmd_byte:
 
     // wait for completion or timeout
     //jbsr    del2ticks   // on return D1 will be hz200
-    move.l  hz200,d1
+    move.l  hz200.w,d1
     addi.l  #600,d1     // wait 600 ticks = 3 seconds
 del3sec:
     btst    #5,gpip.w
