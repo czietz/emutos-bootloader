@@ -35,8 +35,6 @@
 // assumed to be at relative address 0x3E
 start:
     move.l  d7,-(sp)
-    lea     START,a0
-    move.l  d3,(a0)     // store start phys. sector in correct endianess
     
     // allocate sector buffer
     pea     512.w       // assume max logical sector size
@@ -181,6 +179,7 @@ reloc_done:
     jbra    failed
 
 // convert logical sector to absolute physical sector
+// D3: physical start sector of partition
 // D6: logical sector number (WORD!)
 // returns: D0: phys. sector number (LONG)
 log2phys:
@@ -189,7 +188,7 @@ log2phys:
     move.b  BPS_H,d0
     lsr.w   #1,d0
     mulu.w  d6,d0
-    add.l   START,d0
+    add.l   d3,d0
     rts
 
 // load a cluster of a file
