@@ -169,7 +169,7 @@ acsiload:
     
     // according to Ataris ACSI guide some devices require an additional wait
 del2ticks:
-    moveq.l #2,d1       // wait 2 ticks between command bytes
+    moveq.l #2,d1       // wait 2 ticks between commands
     add.l   hz200.w,d1
 del2ticks_wait:
     cmp.l   hz200.w,d1
@@ -205,7 +205,6 @@ next_cmd_byte:
     move.l  (a2)+,(a1)
 
     // wait for completion or timeout
-    //jbsr    del2ticks   // on return D1 will be hz200
     move.l  hz200.w,d1
     addi.l  #600,d1     // wait 600 ticks = 3 seconds
 del3sec:

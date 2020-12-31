@@ -37,7 +37,7 @@ start:
     move.l  d7,-(sp)
     
     // allocate sector buffer
-    pea     512.w       // assume max logical sector size
+    pea     512.w       // used to load physical sectors only
     move.w  #72,-(sp)
     trap    #1
     addq.l  #6,sp
