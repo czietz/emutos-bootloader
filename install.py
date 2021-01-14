@@ -98,10 +98,11 @@ with open(sys.argv[1], "r+b") as f:
 
     with open(BOOT_FILE, "rb") as c:
         f.seek(offset + 0x3e)
-        code = c.read(446)
+        code = bytearray(c.read(446))
         # byte-swap code if required
         if swap:
-            code = struct.pack("<%dH"%(len(code)/2), *struct.unpack(">%dH"%(len(code)/2), code))
+            #code = struct.pack("<%dH"%(len(code)/2), *struct.unpack(">%dH"%(len(code)/2), code))
+            code[0::2],code[1::2] = code[1::2],code[0::2]
         f.write(code)
     
     # MAKE BOOT SECTOR BOOTABLE (by correcting checksum)
