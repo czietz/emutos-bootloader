@@ -94,7 +94,7 @@ with open(sys.argv[1], "r+b") as f:
         endian = ">"
 
     f.seek(offset + 0)
-    f.write(struct.pack(endian+"H", 0x603c))     # bra.s 0x3e
+    f.write(struct.pack(endian+"HH", 0xe900, 0x603a))     # asl.b #4,d0, bra.s 0x3e (MS-DOS/Windows expects the first byte to be 0xE9/0xEB)
 
     with open(BOOT_FILE, "rb") as c:
         f.seek(offset + 0x3e)
