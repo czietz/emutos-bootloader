@@ -90,6 +90,7 @@ start:
 
 next_rootdirsect:
     // load root directory
+    moveq   #1,d2       // just one sector at a time
     jsr     (a5)
     move.l  a3,a2
     moveq   #15,d1      // 16 dir entries per 512 bytes
@@ -230,16 +231,14 @@ loadcluster:
     mulu.w  d7,d3
     add.l   a6,d3
 
-loadclus_nextsect:
     move.l  a4,a3
+    move.w  d7,d2       // number of sectors
     jsr     (a5)
     tst.w   d0
     jbne    loadclus_err
-    lea     0x200(a4),a4
-    addq    #1,d3
-    subq    #1,d7
-    jbne    loadclus_nextsect
-    
+    mulu.w  #0x200,d7   // number of bytes loaded
+    adda.l  d7,a4
+
 loadclus_err:
     movem.l (sp)+,a3/d3/d7
     rts
@@ -263,6 +262,7 @@ getnextcl:
     jbeq    getnext_lookup
     // load new FAT sector
     move.l  d3,(a0) // mark sector as cached
+    moveq   #1,d2   // one physical sector
     jsr     (a5)
     tst.w   d0
     jbne    getnextcl_err

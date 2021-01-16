@@ -134,6 +134,7 @@ msdos_s_next:
     // load boot sector, check for 0x1234 checksum, execute
 load_boot:
     lea     buffer(pc),a3
+    moveq   #1,d2               // one sector
     jsr     (a5)
     tst.w   d0
     jbne    failed
@@ -155,6 +156,7 @@ failed2:
     rts
 
     // use DMAread to load a sector
+    // D2: number of sectors to load (max. 128)
     // D3: sector number
     // D4: device ID (passed by TOS)
     // D5: byte-swap flag
@@ -164,10 +166,11 @@ failed2:
 xbiosload:
     move.w  d4,-(sp)
     move.l  a3,-(sp)
-    move.w  #1,-(sp)        // one sector
+    move.w  d2,-(sp)        // number of sectors
     move.l  d3,-(sp)
     move.w  #DMAread,-(sp)
     trap    #14
+    move.w  6(sp),d2        // restore D2 trashed by XBIOS
     lea     0xe(sp),sp
     // do byte swap if required
     tst.w   d0              // no swapping in case DMAread failed
@@ -176,16 +179,18 @@ xbiosload:
     jbeq    load_end
 swap_sector:
     move.l  a3,a0
-    move.w  #255,d1
+    mulu.w  #256,d2         // number of *WORDS* that were read
+    subq    #1,d2           // for DBRA
 next_swap:
-    move.w  (a0),d2
-    ror.w   #8,d2
-    move.w  d2,(a0)+
-    dbra    d1,next_swap
+    move.w  (a0),d1
+    ror.w   #8,d1
+    move.w  d1,(a0)+
+    dbra    d2,next_swap
 load_end:
     rts
 
     // load a sector from ACSI device
+    // D2: number of sectors to load (max. 255)
     // D3: sector number
     // A3: buffer
     // D4: device ID (in bits 7-5, as passed by TOS)
@@ -219,11 +224,12 @@ del2ticks_wait:
     move.b  1(sp),5(a2)
     move.b  2(sp),9(a2)
     move.b  3(sp),13(a2)
+    move.b  d2,17(a2)   // number of sectors
     addq.l  #8,sp
     // reset DMA and switch to read mode
     move.w  #0x190,(a0)
     move.w  #0x90,(a0)
-    move.w  #1,(a1)     // one sector
+    move.w  d2,(a1)     // number of sectors
     
     // start command
     move.w  #0x88,(a0)
@@ -258,6 +264,6 @@ cmd_buf:
     dc.l    0x0000008A  // sector number...
     dc.l    0x0000008A  // ... gets inserted ...
     dc.l    0x0000008A  // ... here
-    dc.l    0x0001008A  // one sector
+    dc.l    0x0001008A  // one sector (gets changed)
     dc.l    0x00000000  // last cmd byte and start xfer
     
