@@ -227,8 +227,8 @@ del2ticks_wait:
     move.b  d2,17(a2)   // number of sectors
     addq.l  #8,sp
     // reset DMA and switch to read mode
-    move.w  #0x190,(a0)
-    move.w  #0x90,(a0)
+    move.w  #0x198,(a0)
+    move.w  #0x98,(a0)
     move.w  d2,(a1)     // number of sectors
     
     // start command
@@ -253,6 +253,7 @@ exit_wait:
 
     move.w  #0x8a,(a0)  // select status byte
     move.w  (a1),d0     // read status byte
+    and.w   #0xFF,d0    // mask undefined bits
 
 acsi_end:
     sf      flock.w
@@ -265,5 +266,4 @@ cmd_buf:
     dc.l    0x0000008A  // ... gets inserted ...
     dc.l    0x0000008A  // ... here
     dc.l    0x0001008A  // one sector (gets changed)
-    dc.l    0x00000000  // last cmd byte and start xfer
-    
+    dc.l    0x0000000A  // last cmd byte and start xfer
