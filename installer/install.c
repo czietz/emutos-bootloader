@@ -1,9 +1,7 @@
 #include <string.h>
 #include <osbind.h>
 #include <gem.h>
-#include <mint/cookie.h>
 #include <mint/sysvars.h>
-#include <mint/ostruct.h>
 #include "install.h"
 #include "root.h"
 #include "bootsect.h"
