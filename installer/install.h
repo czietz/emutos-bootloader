@@ -1,32 +1,32 @@
 /*
- * resource set indices for test
+ * resource set indices for install
  *
  * created by ORCS 2.18
  */
 
 /*
- * Number of Strings:        18
+ * Number of Strings:        19
  * Number of Bitblks:        0
  * Number of Iconblks:       0
  * Number of Color Iconblks: 0
  * Number of Color Icons:    0
  * Number of Tedinfos:       0
- * Number of Free Strings:   5
+ * Number of Free Strings:   6
  * Number of Free Images:    0
  * Number of Objects:        19
  * Number of Trees:          1
  * Number of Userblks:       0
  * Number of Images:         0
- * Total file size:          1024
+ * Total file size:          1070
  */
 
 #undef RSC_NAME
 #ifndef __ALCYON__
-#define RSC_NAME "test"
+#define RSC_NAME "install"
 #endif
 #undef RSC_ID
-#ifdef test
-#define RSC_ID test
+#ifdef install
+#define RSC_ID install
 #else
 #define RSC_ID 0
 #endif
@@ -35,8 +35,8 @@
 # define RSC_STATIC_FILE 0
 #endif
 #if !RSC_STATIC_FILE
-#define NUM_STRINGS 18
-#define NUM_FRSTR 5
+#define NUM_STRINGS 19
+#define NUM_FRSTR 6
 #define NUM_UD 0
 #define NUM_IMAGES 0
 #define NUM_BB 0
@@ -66,6 +66,8 @@
 
 #define AL_INSTALLERR                      4 /* Alert string */
 
+#define AL_SUCCESS                         5 /* Alert string */
+
 
 
 
@@ -77,7 +79,7 @@
 #    define _WORD short
 #  endif
 #endif
-extern _WORD test_rsc_load(_WORD wchar, _WORD hchar);
-extern _WORD test_rsc_gaddr(_WORD type, _WORD idx, void *gaddr);
-extern _WORD test_rsc_free(void);
+extern _WORD install_rsc_load(_WORD wchar, _WORD hchar);
+extern _WORD install_rsc_gaddr(_WORD type, _WORD idx, void *gaddr);
+extern _WORD install_rsc_free(void);
 #endif

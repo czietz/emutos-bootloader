@@ -127,14 +127,14 @@ static int locate_emutos(void)
     char fname[MAX_FILE+1] = {0};
     char *ptr;
 
-    char **text;
-    rsrc_gaddr(R_FRSTR, ST_SELECT, &text);
+    char *text;
+    rsrc_gaddr(R_STRING, ST_SELECT, &text);
 
     strcpy(emutos_prg, "A:\\EMUTOS*.PRG");
     emutos_prg[0] += Dgetdrv(); /* select current drive */
 
     wind_update(BEG_MCTRL);
-    res = fsel_exinput(emutos_prg, fname, &exbutton, *text);
+    res = fsel_exinput(emutos_prg, fname, &exbutton, text);
     wind_update(END_MCTRL);
 
     if ((res > 0) && (exbutton > 0)) {
@@ -333,11 +333,17 @@ static int install_emutos(const char* fname)
     return 1;
 }
 
+static int alertbox(int default_btn, int id)
+{
+    char *text;
+    rsrc_gaddr(R_STRING, id, &text);
+    return form_alert(default_btn, text);
+}
+
 int main(void)
 {
     int exit = 0;
     OBJECT *menu;
-    char **text;
     short int msg[8];
 
     long res;
@@ -349,7 +355,7 @@ int main(void)
         return 1;
     }
 
-    res = rsrc_load("install.rsc");
+    res = rsrc_load(RSC_NAME ".rsc");
     if (res == 0) {
         form_alert(1, "[1][Failed loading RSC file!][ Exit ]");
         appl_exit();
@@ -358,7 +364,6 @@ int main(void)
 
     /* Show menu and set mouse cursor */
     rsrc_gaddr(R_TREE, MNU_MAIN, &menu);
-    menu_bar(menu, 100);
     menu_bar(menu, 1);
     graf_mouse(ARROW, 0);
 
@@ -369,8 +374,7 @@ int main(void)
             switch (msg[4]) {
 
                 case MNU_ABOUT:
-                    rsrc_gaddr(R_FRSTR, AL_ABOUT, &text);
-                    form_alert(1, *text);
+                    alertbox(1, AL_ABOUT);
                     break;
 
                 case MNU_LOCATE:
@@ -380,8 +384,7 @@ int main(void)
                         menu_ienable(menu, MNU_INSTALL, 1);
                     } else if (res < 0) {
                         /* Wasn't a valid EmuTOS.PRG */
-                        rsrc_gaddr(R_FRSTR, AL_NOEMUTOS, &text);
-                        form_alert(1, *text);
+                        alertbox(1, AL_NOEMUTOS);
                         menu_ienable(menu, MNU_INSTALL, 0);
                     } else {
                         /* User did not select a file */
@@ -390,14 +393,14 @@ int main(void)
                     break;
 
                 case MNU_INSTALL:
-                    rsrc_gaddr(R_FRSTR, AL_INSTALL, &text);
-                    res = form_alert(2, *text);
+                    res = alertbox(2, AL_INSTALL);
                     if (res == 1) {
                         /* User answered yes? */
                         res = install_emutos(emutos_prg);
                         if (!res) {
-                            rsrc_gaddr(R_FRSTR, AL_INSTALLERR, &text);
-                            form_alert(1, *text);
+                            alertbox(1, AL_INSTALLERR);
+                        } else {
+                            alertbox(1, AL_SUCCESS);
                         }
                     }
                     break;
