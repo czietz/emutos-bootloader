@@ -44,6 +44,12 @@
 #define ROOTCODE_START 0
 #define ROOTCODE_CHKSUM 442
 
+#define ROOTCODE_MAGICOFFS 510
+#define ROOTCODE_MSDOSMAGIC 0x55AA
+
+#define PARTTAB_MSDOS 0x1BE
+#define PARTTAB_ATARI 0x1C6
+
 char emutos_prg[MAX_PATH+1] = {0};
 char buffer[4096] __attribute__ ((aligned (2)));
 
@@ -162,6 +168,61 @@ static unsigned short checksum(const char* buffer)
     return 0x1234 - checksum;
 }
 
+#define SWPL(x) ((((x) & 0x000000FFul) << 24) | (((x) & 0x0000FF00ul) << 8) | (((x) & 0x00FF0000ul) >> 8) | (((x) & 0xFF000000ul) >> 24))
+
+typedef struct {
+    unsigned char active;
+    unsigned char filler[7]; /* CHS and type */
+    unsigned long start; /* little endian */
+    unsigned long size;  /* little endian */
+} __attribute__((packed)) MSDOS_PART;
+
+typedef struct {
+    unsigned char active;
+    unsigned char id[3];
+    unsigned long start;
+    unsigned long size;
+} __attribute__((packed)) ATARI_PART;
+
+/* Finds partition corresponding to start sector part_start and marks it as active/bootable */
+static int mark_partition_active(char* rootsect, long part_start)
+{
+    int retval = 0;
+    int k;
+    ATARI_PART* ap;
+    MSDOS_PART* mp;
+    
+    if (*(unsigned short*)(rootsect+ROOTCODE_MAGICOFFS) == ROOTCODE_MSDOSMAGIC) {
+
+        /* Scan MSDOS partition table */
+        mp = (MSDOS_PART*)(rootsect+PARTTAB_MSDOS);
+        for (k=0; k<4; k++) {
+            if (SWPL(mp->start) == part_start) {
+                mp->active |= 0x80; /* mark as bootable */
+                retval = 1;
+                break;
+            }
+            mp++;
+        }
+
+    } else {
+
+        /* Assume and scan Atari partition table */
+        ap = (ATARI_PART*)(rootsect+PARTTAB_ATARI);
+        for (k=0; k<4; k++) {
+            if (ap->start == part_start) {
+                ap->active |= 0x80; /* mark as bootable */
+                retval = 1;
+                break;
+            }
+            ap++;
+        }
+        
+    }
+
+    return retval;
+}
+
 /* Install EMUTOS.SYS, boot sector and root sector */
 static int install_emutos(const char* fname)
 {
@@ -170,6 +231,7 @@ static int install_emutos(const char* fname)
     long inhand, outhand;
     long res;
     unsigned short dev;
+    unsigned long part_start;
 
     /* Check requirements for loader: FAT16 */
 
@@ -233,6 +295,7 @@ static int install_emutos(const char* fname)
     
     res = Super(0ul);
     dev = (*punptr)->v_p_un[DRIVE_C]; /* device number for drive */
+    part_start = (*punptr)->pstart[DRIVE_C];
     Super(res);
     if (dev & 0x80) {
         /* Invalid flag for PUN */
@@ -240,6 +303,22 @@ static int install_emutos(const char* fname)
     }
 
     dev += 2; /* As required by Rwabs in physical mode */
+    
+    /* Find partition table entry corresponding to drive C: and mark active */
+    res = Rwabs(8 | 0, buffer, 1, 0, dev);
+    if (res < 0) {
+        return 0;
+    }
+    res = mark_partition_active(buffer, part_start);
+    if (!res) {
+        return 0;
+    }
+    res = Rwabs(8 | 1, buffer, 1, 0, dev);
+    if (res < 0) {
+        return 0;
+    }
+    
+    /* Install actual code: this requires non-byteswapped access, like TOS would do during boot */
     res = Rwabs((1<<7) | 8 | 0, buffer, 1, 0, dev); /* Don't byteswap: Needs EmuTOS extension */
     if (res < 0) {
         return 0;
