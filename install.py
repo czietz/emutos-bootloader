@@ -22,12 +22,14 @@
 
 import sys
 import struct
+import os
+import subprocess
 
 ROOT_FILE = "root.bin"
 BOOT_FILE = "bootsect.bin"
 
 if len(sys.argv)<2:
-    sys.exit("Usage: %s <hd-image>" % sys.argv[0])
+    sys.exit("Usage: %s <hd-image> [emutos.prg]" % sys.argv[0])
 
 
 with open(sys.argv[1], "r+b") as f:
@@ -118,4 +120,17 @@ with open(sys.argv[1], "r+b") as f:
     sum = sum % 65536 # always positive in Python
     f.seek(offset + 508)
     f.write(struct.pack(endian+"H", sum))
-    
+
+if len(sys.argv) >= 3:
+    if swap:
+        sys.exit("Copying EmuTOS.PRG is only supported on non-byteswapped images")
+    print("Copying '%s'" %  sys.argv[2])
+    try:
+        # Use Mtools mcopy: -o to overwrite existing file, -i to specify image file and offset, mtools_skip_check to relax FAT checks
+        myenv = os.environ
+        myenv["mtools_skip_check"] = "1"
+        subprocess.run(["mcopy", "-o", "-i", "%s@@%d" % (sys.argv[1], offset), sys.argv[2], "::/EMUTOS.SYS"], check=True, env = myenv)
+    except FileNotFoundError:
+        sys.exit("Copying EmuTOS.PRG requires mcopy from GNU Mtools")
+    except subprocess.CalledProcessError:
+        sys.exit("ERROR while copying EmuTOS.PRG")
