@@ -17,7 +17,7 @@ BOOT_MAX=446
 default: root.bin bootsect.bin sizecheck
 
 clean:
-	rm -f root.bin bootsect.bin
+	-rm -f root.bin bootsect.bin emutos.sys sdcard-acsi.img sdcard-ide.img
 
 # Check that maximum binary size is not exceeded
 sizecheck:
@@ -30,8 +30,24 @@ sizecheck:
 		exit 1; \
 	fi
 
-.PHONY: default clean sizecheck
+.PHONY: default clean sizecheck sdcard-images
 
 %.bin: %.S
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 
+emutos.sys:
+	-rm -rf emutos-temp/
+	git clone --depth=1 https://github.com/emutos/emutos.git emutos-temp
+	make -j2 -C emutos-temp prg UNIQUE=us
+	mv emutos-temp/emutosus.prg emutos.sys
+	upx -qq emutos.sys
+
+sdcard-images: sdcard-acsi.img sdcard-ide.img
+
+sdcard-acsi.img: emutos.sys sdcard-template.bin default
+	cp -f sdcard-template.bin $@
+	./install.py $@ emutos.sys
+
+sdcard-ide.img: emutos.sys sdcard-template.bin default
+	cp -f sdcard-template.bin $@
+	./install.py -ideswap $@ emutos.sys

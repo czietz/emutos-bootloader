@@ -139,7 +139,7 @@ with open(sys.argv[1], "r+b") as f:
     else:
         sys.exit("ERROR: No supported partition detected!")
 
-    print("DEBUG: scenario %d" % scenario)
+    # print("DEBUG: scenario %d" % scenario)
 
     # INSTALL ROOT SECTOR at offset 0
     f.seek(0)
