@@ -35,11 +35,15 @@ sizecheck:
 %.bin: %.S
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 
+ifndef UNIQUE
+UNIQUE=us
+endif
+
 emutos.sys:
 	-rm -rf emutos-temp/
 	git clone --depth=1 https://github.com/emutos/emutos.git emutos-temp
-	make -j2 -C emutos-temp prg UNIQUE=us
-	mv emutos-temp/emutosus.prg emutos.sys
+	make -j2 -C emutos-temp prg UNIQUE=$(UNIQUE)
+	mv emutos-temp/emutos$(UNIQUE).prg emutos.sys
 	upx -qq emutos.sys
 
 sdcard-images: sdcard-acsi.img sdcard-ide.img
