@@ -3,7 +3,7 @@ CFLAGS = -nostdlib -s -O2
 
 install.prg: install.c install.h install.rsc root.h bootsect.h
 ifdef LIBCMINI
-	$(CC) $(CFLAGS) -I$(LIBCMINI)/include -L$(LIBCMINI)/build -o $@ $(LIBCMINI)/build/crt0.o $< -lcmini -lgcc -lgem
+	$(CC) $(CFLAGS) -I$(LIBCMINI)/include -L$(LIBCMINI)/lib -o $@ $(LIBCMINI)/lib/crt0.o $< -lcmini -lgcc -lgem
 else
 	@echo "Define LIBCMINI to point to the libcmini directory" && exit 1
 endif

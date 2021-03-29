@@ -1,0 +1,43 @@
+name: Build
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install packages
+      run: |
+        sudo add-apt-repository ppa:vriviere/ppa && sudo apt-get update
+        sudo apt-get install cross-mint-essential xxd upx mtools python3
+    - name: Install libcmini
+      run: |
+        mkdir libcmini
+        curl -L https://github.com/freemint/libcmini/releases/download/v0.54/libcmini-0.54.tar.gz | tar -xz -C libcmini
+    - name: Build binaries
+      run: |
+        make clean
+        make
+        make -C installer LIBCMINI="$PWD/libcmini"
+        make sdcard-images
+    - name: Create link to EmuTOS source code
+      run: |
+        cd emutos-temp
+        echo "SD card images include EmuTOS built from source code at:" > ../emutos.txt
+        echo "https://github.com/emutos/emutos/tree/`git log -1 --format=%H`" >> ../emutos.txt
+        cd ..
+    - name: Save binaries as build artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: emutos-bootloader
+        path: |
+          emutos.txt
+          sdcard-*.img
+          installer/install.prg
+          installer/install.rsc
