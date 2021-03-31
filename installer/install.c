@@ -282,8 +282,11 @@ static int install_emutos(const char* fname)
     if (res < 0) {
         return 0;
     }
-    /* asl.b #4,d0, bra.s 0x3e (MS-DOS/Windows expects the first byte to be 0xE9/0xEB) */
-    memcpy(buffer,"\xe9\x00\x60\x3a", 4);
+    /* asl.b #5,d0; sub.w a5,d0; bra.s 0x3e
+     * MS-DOS/Windows expects the first byte to be 0xE9/0xEB
+     * a fairly common SD-to-IDE adapter checks for 0xEB .. 0x90
+     */
+    memcpy(buffer,"\xeb\x00\x90\x4d\x60\x38", 6);
     memcpy(buffer+BOOTCODE_START, ___bootsect_bin, ___bootsect_bin_len);
     *(unsigned short *)(buffer+BOOTCODE_CHKSUM) += checksum(buffer);
     res = Rwabs(2 | 1, buffer, 1, 0, DRIVE_C);

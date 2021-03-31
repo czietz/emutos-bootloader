@@ -175,7 +175,10 @@ with open(sys.argv[1], "r+b") as f:
         endian = ">"
 
     f.seek(offset + 0)
-    f.write(struct.pack(endian+"HH", 0xe900, 0x603a))     # asl.b #4,d0, bra.s 0x3e (MS-DOS/Windows expects the first byte to be 0xE9/0xEB)
+    # asl.b #5,d0; sub.w a5,d0; bra.s 0x3e 
+    # MS-DOS/Windows expects the first byte to be 0xE9/0xEB
+    # a fairly common SD-to-IDE adapter checks for 0xEB .. 0x90
+    f.write(struct.pack(endian+"HHH", 0xeb00, 0x904d, 0x6038))
 
     with open(BOOT_FILE, "rb") as c:
         f.seek(offset + 0x3e)
@@ -204,9 +207,9 @@ if len(sys.argv) >= 3:
         sys.exit("Copying EmuTOS.PRG is only supported on images where the filesystem is in PC byte order")
     print("Copying '%s'" %  sys.argv[2])
     try:
-        # Use Mtools mcopy: -o to overwrite existing file, -i to specify image file and offset, mtools_skip_check to relax FAT checks
+        # Use Mtools mcopy: -o to overwrite existing file, -i to specify image file and offset, MTOOLS_SKIP_CHECK to relax FAT checks
         myenv = os.environ
-        myenv["mtools_skip_check"] = "1"
+        myenv["MTOOLS_SKIP_CHECK"] = "1"
         subprocess.run(["mcopy", "-o", "-i", "%s@@%d" % (sys.argv[1], offset), sys.argv[2], "::/EMUTOS.SYS"], check=True, env = myenv)
     except FileNotFoundError:
         sys.exit("Copying EmuTOS.PRG requires mcopy from GNU Mtools")
