@@ -179,6 +179,10 @@ with open(sys.argv[1], "r+b") as f:
     # MS-DOS/Windows expects the first byte to be 0xE9/0xEB
     # a fairly common SD-to-IDE adapter checks for 0xEB .. 0x90
     f.write(struct.pack(endian+"HHH", 0xeb00, 0x904d, 0x6038))
+    
+    # clear Windows dirty flag
+    f.seek(offset + 0x25)
+    f.write(b"\0")
 
     with open(BOOT_FILE, "rb") as c:
         f.seek(offset + 0x3e)

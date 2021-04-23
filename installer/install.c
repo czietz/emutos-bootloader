@@ -39,6 +39,7 @@
 #define BPB_FAT16 1
 #define COOKIE_XHDI 0x58484449L
 
+#define WINDOWS_DIRTY_FLAG 0x25
 #define BOOTCODE_START 0x3E
 #define BOOTCODE_CHKSUM 508
 #define ROOTCODE_START 0
@@ -287,6 +288,7 @@ static int install_emutos(const char* fname)
      * a fairly common SD-to-IDE adapter checks for 0xEB .. 0x90
      */
     memcpy(buffer,"\xeb\x00\x90\x4d\x60\x38", 6);
+    *(buffer+WINDOWS_DIRTY_FLAG) = 0;   /* clear Windows "dirty" flag */
     memcpy(buffer+BOOTCODE_START, ___bootsect_bin, ___bootsect_bin_len);
     *(unsigned short *)(buffer+BOOTCODE_CHKSUM) += checksum(buffer);
     res = Rwabs(2 | 1, buffer, 1, 0, DRIVE_C);

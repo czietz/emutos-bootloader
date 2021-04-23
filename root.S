@@ -138,6 +138,7 @@ load_boot:
     jsr     (a5)
     tst.w   d0
     jbne    failed
+    clr.b   0x25(a3)            // clear Windows "dirty" flag that would corrupt the checksum
     move.w  #255,d1             // note that D0.w is guaranteed to be 0
 boot_sum:
     add.w   (a3)+,d0
