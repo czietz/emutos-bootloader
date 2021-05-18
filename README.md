@@ -30,12 +30,15 @@ There are three ways to install the EmuTOS hard disk boot-loader.
 
 1. **Using a ready-made image file**
    Two hard disk image files are [provided for download](https://nightly.link/czietz/emutos-bootloader/workflows/build/master/emutos-bootloader.zip): `sdcard-ide.img` is for installation on IDE devices (without Smartswap), `sdcard-acsi.img` is for all other interfaces: ACSI, SCSI, IDE *with* Smartswap. Writing the appropriate image to a disk (or SD card, CF card, ...) at least 256 MB in size makes the disk bootable. It also creates a TOS- and PC-compatible partition for easy data transfer. Windows users can, for example, use [Win32 Disk Imager](https://sourceforge.net/projects/win32diskimager/) to write the image file.
+
    *Note*: All data on the target disk is erased by writing the image file.
+
    *Note:* Currently, the disk image is only provided with an (US-)English version of EmuTOS. See below for updating/replacing it.
 
 2. **Using the EmuTOS-based installer**
-   The boot-loader can be installed from a running version of EmuTOS using the provided installer. Copy `EMUTOS.PRG` (in the language of your choice) as well as `INSTALL.PRG` and `INSTALL.RSC` to your Atari and start EmuTOS by running `EMUTOS.PRG`. Note that merely running the PRG version of EmuTOS does not modify your system in any way. Therefore, you can try EmuTOS as extensively as you like before installing the boot-loader.
+   The boot-loader can be installed from a running version of EmuTOS using the [provided installer](https://nightly.link/czietz/emutos-bootloader/workflows/build/master/emutos-bootloader.zip). Copy `EMUTOS.PRG` (in the language of your choice) as well as `INSTALL.PRG` and `INSTALL.RSC` to your Atari and start EmuTOS by running `EMUTOS.PRG`. Note that merely running the PRG version of EmuTOS does not modify your system in any way. Therefore, you can try EmuTOS as extensively as you like before installing the boot-loader.
    Verify that EmuTOS has recognized your first hard disk partition as drive C:. To proceed with the installation, start `INSTALL.PRG`. Locate your copy of `EMUTOS.PRG` and install it to drive C:. Reboot.
+
    *Note:* By installing the EmuTOS hard disk boot-loader in this way all files on your hard disk are retained. However, any existing hard disk driver (e.g., AHDI, HDDRIVER, ...) is uninstalled and replaced by the EmuTOS boot-loader.
 
 3. **Using the Python script installer** (for advanced users)
@@ -46,7 +49,9 @@ There are three ways to install the EmuTOS hard disk boot-loader.
    ```
 
    On most operating systems, root or administrator rights are required. Replace `/dev/sdX`  with the device name of the target disk (or SD card, CF card, ...). Replace `path/to/emutos.prg` with the path to `EMUTOS.PRG`  (in the language of your choice). Pass the optional `-ideswap` argument if the target disk (or card) is to be used as IDE device (without Smartswap) in the Atari.
+
    *Note:* By installing the EmuTOS hard disk boot-loader in this way all files on your hard disk are retained. However, any existing hard disk driver (e.g., AHDI, HDDRIVER, ...) is deinstalled and replaced by the EmuTOS boot-loader.
+
    *Note:* Be extra-careful to specify the **correct** target device. There is no prompt to confirm your choice!
 
 ## Updating EmuTOS
