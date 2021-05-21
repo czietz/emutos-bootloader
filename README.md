@@ -2,11 +2,11 @@
 
 ## Purpose
 
-The EmuTOS hard disk boot-loader enables you to to boot EmuTOS from a hard disk (or hard disk replacement such as Ultrasatan or Gigafile) without needing any 3rd party hard disk driver. This makes it easy to use EmuTOS as default OS on your Atari. No hardware modifications (such as replacing ROMs) is required.
+The EmuTOS hard disk boot-loader enables you to boot EmuTOS from a hard disk (or hard disk replacement such as Ultrasatan or Gigafile) without needing any 3rd party hard disk driver. This makes it easy to use EmuTOS as the default OS on your Atari. No hardware modifications (such as replacing ROMs) is required.
 
 ## About EmuTOS
 
-[EmuTOS](https://emutos.sourceforge.io/) is a free operating system mainly, not but not only, for the Atari ST and its successors. Compared to Atari TOS, it adds additional hardware support, more languages, and a wider range of supported systems, among other things.
+[EmuTOS](https://emutos.sourceforge.io/) is a free operating system mainly, but not only, for the Atari ST and its successors. Compared to Atari TOS, it adds additional hardware support, more languages, and a wider range of supported systems, among other things.
 
 ## Supported configurations
 
@@ -56,7 +56,7 @@ There are three ways to install the EmuTOS hard disk boot-loader.
 
 ## Updating EmuTOS
 
-To update the installed version of EmuTOS, simply replace `C:\EMUTOS.SYS`  on the target disk with a copy of `EMUTOS.PRG` (in the language of your choice), e.g., from a current [snapshot of EmuTOS](https://sourceforge.net/projects/emutos/files/snapshots/).
+To update the installed version of EmuTOS, simply replace `C:\EMUTOS.SYS`  on the target disk with a copy of `EMUTOS.PRG` (in the language of your choice and renamed to `EMUTOS.SYS`), e.g., from a current [snapshot of EmuTOS](https://sourceforge.net/projects/emutos/files/snapshots/).
 
 ## Supported hard disk interfaces by Atari TOS version
 
