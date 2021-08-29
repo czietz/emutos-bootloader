@@ -64,9 +64,9 @@ To launch the EmuTOS hard disk boot-loader, TOS on your Atari needs to be able t
 
 |         | ACSI      | IDE                 | SCSI      |
 | :------ | --------- | ------------------- | --------- |
-| TOS 1.x | supported | -                   | -         |
+| TOS 1.x | supported | [needs a patched TOS](https://github.com/czietz/ideboot) | -         |
 | TOS 2.x | supported | supported           | -         |
-| TOS 3.x | supported | needs a patched TOS | supported |
+| TOS 3.x | supported | [needs a patched TOS](https://www.markusheiden.de/atari/tospatch.html) | supported |
 | TOS 4.x | -         | supported           | supported |
 
 ## License
