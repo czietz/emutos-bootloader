@@ -41,3 +41,15 @@ jobs:
           sdcard-*.img
           installer/install.prg
           installer/install.rsc
+    - name: Create ZIP file
+      run: |
+        zip -9 emutos-bootloader-latest-$GITHUB_RUN_NUMBER.zip emutos.txt sdcard-*.img installer/install.prg installer/install.rsc
+    - name: Save binaries as pre-release
+      uses: "marvinpinto/action-automatic-releases@v1.2.1"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest"
+        prerelease: true
+        title: "Latest snapshot build"
+        files: |
+          emutos-bootloader-latest-${{ github.run_number }}.zip
