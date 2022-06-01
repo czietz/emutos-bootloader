@@ -31,19 +31,22 @@ jobs:
         cd emutos-temp
         echo "SD card images include EmuTOS built from source code at:" > ../emutos.txt
         echo "https://github.com/emutos/emutos/tree/`git log -1 --format=%H`" >> ../emutos.txt
+        echo "EmuTOS license terms:" >> ../emutos.txt
+        cat doc/license.txt >> ../emutos.txt
         cd ..
     - name: Save binaries as build artifacts
       uses: actions/upload-artifact@v2
       with:
         name: emutos-bootloader
         path: |
+          LICENSE
           emutos.txt
           sdcard-*.img
           installer/install.prg
           installer/install.rsc
     - name: Create ZIP file
       run: |
-        zip -9 emutos-bootloader-latest-$GITHUB_RUN_NUMBER.zip emutos.txt sdcard-*.img installer/install.prg installer/install.rsc
+        zip -9 emutos-bootloader-latest-$GITHUB_RUN_NUMBER.zip LICENSE emutos.txt sdcard-*.img installer/install.prg installer/install.rsc
     - name: Save binaries as pre-release
       uses: "marvinpinto/action-automatic-releases@v1.2.1"
       with:
