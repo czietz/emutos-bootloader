@@ -1,4 +1,4 @@
-/* Copyright (c) 2021 Christian Zietz
+/* Copyright (c) 2021 - 2024 Christian Zietz
 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -131,7 +131,7 @@ static int locate_emutos(void)
     char *text;
     rsrc_gaddr(R_STRING, ST_SELECT, &text);
 
-    strcpy(emutos_prg, "A:\\EMUTOS*.PRG");
+    strcpy(emutos_prg, "A:\\EMU*.PRG");
     emutos_prg[0] += Dgetdrv(); /* select current drive */
 
     wind_update(BEG_MCTRL);
