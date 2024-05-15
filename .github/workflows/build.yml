@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install packages
       run: |
         sudo add-apt-repository ppa:vriviere/ppa && sudo apt-get update
@@ -38,7 +38,7 @@ jobs:
         cat doc/license.txt >> ../emutos.txt
         cd ..
     - name: Save binaries as build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: emutos-bootloader
         path: |
