@@ -1,4 +1,4 @@
-/* Copyright (c) 2021 - 2024 Christian Zietz
+/* Copyright (c) 2021 - 2026 Christian Zietz
 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,6 +26,7 @@
 #include <mint/sysvars.h>
 #include "install.h"
 #include "root.h"
+#include "rootgpt.h"
 #include "bootsect.h"
 
 #define MAX_PATH 1024
@@ -50,6 +51,9 @@
 
 #define PARTTAB_MSDOS 0x1BE
 #define PARTTAB_ATARI 0x1C6
+
+#define TYPE_PROTECTIVE_PART 0xEE
+#define EFI_SIGNATURE "EFI PART"
 
 char emutos_prg[MAX_PATH+1] = {0};
 char buffer[4096] __attribute__ ((aligned (2)));
@@ -173,7 +177,9 @@ static unsigned short checksum(const char* buffer)
 
 typedef struct {
     unsigned char active;
-    unsigned char filler[7]; /* CHS and type */
+    unsigned char filler1[3]; /* CHS */
+    unsigned char type;
+    unsigned char filler2[3]; /* CHS */
     unsigned long start; /* little endian */
     unsigned long size;  /* little endian */
 } __attribute__((packed)) MSDOS_PART;
@@ -184,6 +190,22 @@ typedef struct {
     unsigned long start;
     unsigned long size;
 } __attribute__((packed)) ATARI_PART;
+
+/* Check if a disk is partitioned with a GUID Partition Table */
+static int is_gpt(char* rootsects)
+{
+    int retval = 0;
+    MSDOS_PART* mp;
+    mp = (MSDOS_PART*)(rootsects+PARTTAB_MSDOS);
+
+    /* Check the partition table for protective partition entry */
+    if (mp->type == TYPE_PROTECTIVE_PART) {
+        /* Check the second sector for EFI signature */
+        retval = (memcmp(&rootsects[512], EFI_SIGNATURE, strlen(EFI_SIGNATURE)) == 0);
+    }
+
+    return retval;
+}
 
 /* Finds partition corresponding to start sector part_start and marks it as active/bootable */
 static int mark_partition_active(char* rootsect, long part_start)
@@ -229,6 +251,7 @@ static int install_emutos(const char* fname)
 {
     HDINFO** punptr = (HDINFO**)0x516L; /* Note: definition in MiNTLib is wrong */
     _BPB *bpb;
+    int gpt;
     long inhand, outhand;
     long res;
     unsigned short dev;
@@ -309,18 +332,23 @@ static int install_emutos(const char* fname)
 
     dev += 2; /* As required by Rwabs in physical mode */
     
-    /* Find partition table entry corresponding to drive C: and mark active */
-    res = Rwabs(8 | 0, buffer, 1, 0, dev);
+    res = Rwabs(8 | 0, buffer, 2, 0, dev);
     if (res < 0) {
         return 0;
     }
-    res = mark_partition_active(buffer, part_start);
-    if (!res) {
-        return 0;
-    }
-    res = Rwabs(8 | 1, buffer, 1, 0, dev);
-    if (res < 0) {
-        return 0;
+
+    gpt = is_gpt(buffer);
+
+    if (!gpt) {
+        /* Find partition table entry corresponding to drive C: and mark active */
+        res = mark_partition_active(buffer, part_start);
+        if (!res) {
+            return 0;
+        }
+        res = Rwabs(8 | 1, buffer, 1, 0, dev);
+        if (res < 0) {
+            return 0;
+        }
     }
     
     /* Install actual code: this requires non-byteswapped access, like TOS would do during boot */
@@ -328,7 +356,11 @@ static int install_emutos(const char* fname)
     if (res < 0) {
         return 0;
     }
-    memcpy(buffer+ROOTCODE_START, ___root_bin, ___root_bin_len);
+    if (!gpt) {
+        memcpy(buffer+ROOTCODE_START, ___root_bin, ___root_bin_len);
+    } else {
+        memcpy(buffer+ROOTCODE_START, ___rootgpt_bin, ___rootgpt_bin_len);
+    }
     *(unsigned short *)(buffer+ROOTCODE_CHKSUM) += checksum(buffer);
     res = Rwabs((1<<7) | 8 | 1, buffer, 1, 0, dev); /* Don't byteswap: Needs EmuTOS extension */
     if (res < 0) {

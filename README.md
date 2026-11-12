@@ -23,6 +23,7 @@ The EmuTOS hard disk boot-loader works with all partitioning schemes supported b
 * Atari-style partitions (also known as "TOS-compatible")
 * PC-style partitions (e.g., created on Windows, with FAT16 file system)
 * TOS- and Windows-compatible partitions (created, e.g., by HDDRIVER)
+* GUID Partition Table (GPT) – with EmuTOS snapshots since October 2025, and with EmuTOS 1.5
 
 ## Installation
 

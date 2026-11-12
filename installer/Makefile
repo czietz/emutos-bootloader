@@ -1,7 +1,7 @@
 CC = m68k-atari-mint-gcc
 CFLAGS = -nostdlib -s -O2
 
-install.prg: install.c install.h install.rsc root.h bootsect.h
+install.prg: install.c install.h install.rsc root.h rootgpt.h bootsect.h
 ifdef LIBCMINI
 	$(CC) $(CFLAGS) -I$(LIBCMINI)/include -L$(LIBCMINI)/lib -o $@ $(LIBCMINI)/lib/crt0.o $< -lcmini -lgcc -lgem
 else
@@ -9,6 +9,9 @@ else
 endif
 
 root.h: ../root.bin
+	xxd -i $< $@
+
+rootgpt.h: ../rootgpt.bin
 	xxd -i $< $@
 
 bootsect.h: ../bootsect.bin

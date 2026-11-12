@@ -14,15 +14,19 @@ ROOT_MAX=442
 #   bytes 510-511 are reserved for 0xAA55 magic number.
 BOOT_MAX=446
 
-default: root.bin bootsect.bin sizecheck
+default: root.bin rootgpt.bin bootsect.bin sizecheck
 
 clean:
-	-rm -f root.bin bootsect.bin emutos.sys sdcard-acsi.img sdcard-ide.img
+	-rm -f root.bin rootgpt.bin bootsect.bin emutos.sys sdcard-acsi.img sdcard-ide.img
 
 # Check that maximum binary size is not exceeded
 sizecheck:
 	@if [ `cat root.bin | wc -c` -gt $(ROOT_MAX) ]; then \
 		echo "Root sector binary must be max. $(ROOT_MAX) bytes!"; \
+		exit 1; \
+	fi
+	@if [ `cat rootgpt.bin | wc -c` -gt $(ROOT_MAX) ]; then \
+		echo "GPT root sector binary must be max. $(ROOT_MAX) bytes!"; \
 		exit 1; \
 	fi
 	@if [ `cat bootsect.bin | wc -c` -gt $(BOOT_MAX) ]; then \
@@ -34,6 +38,9 @@ sizecheck:
 
 %.bin: %.S
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
+
+rootgpt.bin: root.S
+	$(CC) -DGUID_PARTITION_TABLE $(CFLAGS) $(LDFLAGS) -o $@ $<
 
 ifndef UNIQUE
 UNIQUE=us

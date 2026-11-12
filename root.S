@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Christian Zietz
+// Copyright (c) 2021 - 2026 Christian Zietz
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -47,6 +47,11 @@
 #define MSDOS_S 0xAA55
 #define BOOT_CHECK 0x1234
 
+#define EFI   0x45464920
+#define EFI_S 0x46452049
+#define EFI_MSDOS 0xA2A0D0EB
+#define EFI_BGM   0xFE5A4E73
+
 #define PT_signature (start+0x1fe)
 
 #define PT_A_flag    (start+0x1c6)
@@ -56,6 +61,9 @@
 #define PT_M_flag    (start+0x1be)
 #define PT_M_start   0x8
 #define PT_M_length  0x10
+
+#define PT_G_length  128
+#define PT_G_start   32
 
 #define buffer       (start+0x200)
 
@@ -85,9 +93,13 @@ use_own_loader:
     move.w  d7,d4               // device ID in bits 7-5
     lea     acsiload(pc),a5
 
+
     // determine type of partition table
 findpartition:
     moveq   #0,d5               // byteswap marker
+
+#ifndef GUID_PARTITION_TABLE
+
     moveq   #3,d0               // number of partitions to check - 1
     lea     PT_signature(pc),a0
     cmpi.w  #MSDOS,(a0)
@@ -130,7 +142,45 @@ msdos_s_next:
     jbne    failed              // no partition found
     move.l  PT_M_start(a0),d3   // start sector
     swap    d3                  // byte-order is alredy correct, only swap words
-    
+
+#else // if GUID_PARTITION_TABLE
+
+    lea     buffer(pc),a3
+    moveq   #1,d2               // one sector
+    moveq   #1,d3               // LBA 1 = primary GPT header
+    jsr     (a5)
+    tst.w   d0
+    jbne    failed
+
+    cmpi.l  #EFI,(a3)           // "EFI " signature
+    jbeq    foundgpt
+    cmpi.l  #EFI_S,(a3)         // byte-swapped "EFI "
+    jbne    failed
+    st      d5                  // byteswap marker
+
+foundgpt:
+    moveq   #1,d2               // one sector
+    moveq   #2,d3               // LBA 2 = partition entries
+    jsr     (a5)
+    tst.w   d0
+    jbne    failed
+
+    moveq   #3,d0               // number of partitions to check - 1
+gpt_next:
+    move.l  PT_G_start(a3),d3   // start LBA number
+    ror.w   #8,d3               // byte-swap start sector number
+    swap    d3
+    ror.w   #8,d3
+    cmpi.l  #EFI_MSDOS,(a3)     // first four bytes of ID for DOS/FAT16
+    jbeq    load_boot
+    cmpi.l  #EFI_BGM,(a3)       // first four bytes of ID for BGM
+    jbeq    load_boot
+    lea     PT_G_length(a3),a3
+    dbra    d0,gpt_next
+    jbra    failed
+
+#endif // GUID_PARTITION_TABLE
+
     // load boot sector, check for 0x1234 checksum, execute
 load_boot:
     lea     buffer(pc),a3

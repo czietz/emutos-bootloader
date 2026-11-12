@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright (c) 2021 Christian Zietz
+# Copyright (c) 2021 - 2026 Christian Zietz
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to
@@ -65,6 +65,7 @@ import os
 import subprocess
 
 ROOT_FILE = "root.bin"
+ROOTGPT_FILE = "rootgpt.bin"
 BOOT_FILE = "bootsect.bin"
 
 if len(sys.argv)<2:
@@ -77,6 +78,8 @@ if sys.argv[1] == "-ideswap":
 else:
     ideswap = False
 
+is_gpt = False
+
 with open(sys.argv[1], "r+b") as f:
 
     # FIND FIRST PARTITION AND DETERMINE SCENARIO
@@ -88,29 +91,54 @@ with open(sys.argv[1], "r+b") as f:
     atarimagic  = mbr[0x1C7:0x1CA]
     atarimagic2 = mbr[0x1C6:0x1C7] + mbr[0x1C9:0x1CA] + mbr[0x1C8:0x1C9] 
     if pcmagic == 0xAA55:
-        print("Detected DOS partition table (non-byteswapped)")
-        lba = struct.unpack("<L", mbr[0x1BE+8:0x1BE+12])[0]
-        print("First partition at LBA = %d" % lba)
-        if lba == 0:
-            sys.error("Illegal partition table")
-        # mark as bootable
-        f.seek(0x1BE)
-        f.write(b'\x80')
+        if mbr[0x1c2] == 0xee: # GPT protective partition
+            gpt = f.read(1024)
+            if gpt[0:8] == b"EFI PART":
+                is_gpt = True
+                print("Detected GUID partition table (non-byteswapped)")
+                lba = struct.unpack("<Q", gpt[0x220:0x220+8])[0]
+                print("First partition at LBA = %d" % lba)
+                if lba == 0:
+                    sys.error("Illegal partition table")
+            else:
+                sys.error("Illegal GUID partition table")
+        else:
+            print("Detected DOS partition table (non-byteswapped)")
+            lba = struct.unpack("<L", mbr[0x1BE+8:0x1BE+12])[0]
+            print("First partition at LBA = %d" % lba)
+            if lba == 0:
+                sys.error("Illegal partition table")
+            # mark as bootable
+            f.seek(0x1BE)
+            f.write(b'\x80')
         # could be either scenario 1 or 2, let user decide
         if ideswap:
             scenario = 2
         else:
             scenario = 1
     elif pcmagic == 0x55AA:
-        print("Detected DOS partition table (byteswapped)")
-        lba = struct.unpack(">HH", mbr[0x1BE+8:0x1BE+12])
-        lba = lba[1]*256 + lba[0]
-        print("First partition at LBA = %d" % lba)
-        if lba == 0:
-            sys.error("Illegal partition table")
-        # mark as bootable
-        f.seek(0x1BF)
-        f.write(b'\x80')
+        if mbr[0x1c3] == 0xee: # GPT protective partition
+            gpt = bytearray(f.read(1024))
+            gpt[0::2], gpt[1::2] = gpt[1::2], gpt[0::2] # swap bytes
+            if gpt[0:8] == b"EFI PART":
+                is_gpt = True
+                print("Detected GUID partition table (byteswapped)")
+                lba = struct.unpack("<Q", gpt[0x220:0x220+8])[0]
+                print("First partition at LBA = %d" % lba)
+                if lba == 0:
+                    sys.error("Illegal partition table")
+            else:
+                sys.error("Illegal GUID partition table")
+        else:
+            print("Detected DOS partition table (byteswapped)")
+            lba = struct.unpack(">HH", mbr[0x1BE+8:0x1BE+12])
+            lba = lba[1]*256 + lba[0]
+            print("First partition at LBA = %d" % lba)
+            if lba == 0:
+                sys.error("Illegal partition table")
+            # mark as bootable
+            f.seek(0x1BF)
+            f.write(b'\x80')
         # this is scenario 3
         scenario = 3
     elif atarimagic == b"BGM" or atarimagic == b"GEM":
@@ -143,7 +171,7 @@ with open(sys.argv[1], "r+b") as f:
 
     # INSTALL ROOT SECTOR at offset 0
     f.seek(0)
-    with open(ROOT_FILE, "rb") as c:
+    with open(ROOT_FILE if not is_gpt else ROOTGPT_FILE, "rb") as c:
         code = bytearray(c.read(442))
         # swap code for IDE devices
         if scenario >= 2:
@@ -166,7 +194,7 @@ with open(sys.argv[1], "r+b") as f:
     sum = sum % 65536 # always positive in Python
     f.seek(442)
     f.write(struct.pack(endian+"H", sum))
-    
+
     # INSTALL BOOT SECTOR
     offset = lba * 512 # Offset of boot sector
     if scenario == 3:
