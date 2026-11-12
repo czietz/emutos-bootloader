@@ -41,14 +41,16 @@ There are three ways to install the EmuTOS hard disk boot-loader.
 
    *Note:* By installing the EmuTOS hard disk boot-loader in this way all files on your hard disk are retained. However, any existing hard disk driver (e.g., AHDI, HDDRIVER, ...) is uninstalled and replaced by the EmuTOS boot-loader.
 
-3. **Using the Python script installer** (for advanced users)
-   A Python script is provided mainly for developers or for (semi-)automated deployment of the EmuTOS hard disk boot-loader. Additionally, it can use `mcopy` from [GNU mtools](https://www.gnu.org/software/mtools/) to also copy `EMUTOS.PRG` (or `EMU256??.PRG`) to the disk. The script needs to be called as follows:
+3. **Using the Python script installer** (only for advanced users)
+   A Python script is provided mainly for developers or for (semi-)automated deployment of the EmuTOS hard disk boot-loader. For this, the EmuTOS hard disk boot-loader needs to be compiled first by running `make`. Additionally, the script can use `mcopy` from [GNU mtools](https://www.gnu.org/software/mtools/) to also copy `EMUTOS.PRG` (or `EMU256??.PRG`) to the disk. The script needs to be called as follows:
 
    ```
    install.py [-ideswap] /dev/sdX path/to/emutos.prg
    ```
 
    On most operating systems, root or administrator rights are required. Replace `/dev/sdX`  with the device name of the target disk (or SD card, CF card, ...). Replace `path/to/emutos.prg` with the path to `EMUTOS.PRG` or `EMU256??.PRG` (in the language of your choice). Pass the optional `-ideswap` argument if the target disk (or card) is to be used as IDE device (without Smartswap) in the Atari.
+
+   *Note*: Before running the script, the disk needs to be partitioned with a FAT16 filesystem as the first partition.
 
    *Note:* By installing the EmuTOS hard disk boot-loader in this way all files on your hard disk are retained. However, any existing hard disk driver (e.g., AHDI, HDDRIVER, ...) is deinstalled and replaced by the EmuTOS boot-loader.
 
