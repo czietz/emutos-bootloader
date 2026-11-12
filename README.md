@@ -44,7 +44,7 @@ There are three ways to install the EmuTOS hard disk boot-loader.
 3. **Using the Python script installer** (for advanced users)
    A Python script is provided mainly for developers or for (semi-)automated deployment of the EmuTOS hard disk boot-loader. Additionally, it can use `mcopy` from [GNU mtools](https://www.gnu.org/software/mtools/) to also copy `EMUTOS.PRG` (or `EMU256??.PRG`) to the disk.
 
-   Before running the installation script you must build root.bin and bootsect.bin by running `make` and your must ensure the target drive is partitioned correctly.
+   Before running the installation script you must build `root.bin` and `bootsect.bin` by running `make` and you must ensure the target drive is partitioned correctly.
 
    `install.py` requires that the target disk is using a DOS partition table and you must have at least one FAT16 partition of up to 2 GB in size already created.
 
